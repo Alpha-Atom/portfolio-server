@@ -6,6 +6,7 @@ var forceSSL = require('express-force-ssl');
 var route_manager = require("../ip-project-server/utils/route-manager.js");
 var scheduler = require("../ip-project-server/presenters/schedule-controller.js");
 var bodyParser = require('body-parser');
+var serveIndex = require('serve-index');
 var basic_auth = require('basic-auth');
 var FileStreamRotator = require('file-stream-rotator');
 var morgan = require('morgan');
@@ -56,7 +57,7 @@ app.use(morgan('short', {stream: accessLogStream}))
 app.use(morgan('short'));
 
 // Check the /soc-api/ routes.
-app.use('/soc-api/v1/', route_manager);
+app.use('/soc-api/v1', route_manager);
 
 // Serve the log files
 app.use('/log', auth, express.static('log'));
