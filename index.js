@@ -3,14 +3,13 @@ var https = require('https');
 var express = require('express');
 var path = require('path');
 var forceSSL = require('express-force-ssl');
-var route_manager = require("../ip-project-server/utils/route-manager.js");
-var scheduler = require("../ip-project-server/presenters/schedule-controller.js");
 var bodyParser = require('body-parser');
 var basic_auth = require('basic-auth');
 var FileStreamRotator = require('file-stream-rotator');
 var morgan = require('morgan');
-var fs = require('fs');
 var logDirectory = 'log'
+var route_manager = require("../ip-project-server/utils/route-manager.js");
+var scheduler = require("../ip-project-server/presenters/schedule-controller.js");
 var app = express();
 
 // Set up authentication and existing events.
