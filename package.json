@@ -9,7 +9,12 @@
   "author": "Matt Coles",
   "license": "MIT",
   "dependencies": {
+    "basic-auth": "^1.0.4",
+    "body-parser": "^1.15.1",
     "express": "^4.13.4",
-    "express-force-ssl": "^0.3.2"
+    "express-force-ssl": "^0.3.2",
+    "file-stream-rotator": "0.0.6",
+    "morgan": "^1.7.0",
+    "serve-index": "^1.7.3"
   }
 }
