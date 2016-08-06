@@ -99,10 +99,12 @@ app.use(function (req,res,next) {
 
 var prkey = fs.readFileSync('key.pem');
 var certi = fs.readFileSync('cert.pem');
+var capem = fs.readFileSync('ca.pem');
 
 https.createServer({
   key: prkey,
-  cert: certi
+  cert: certi,
+  ca: capem
 }, app).listen(443, function() {
   console.log('Now accepting HTTPS connections on port 443.');
 });
