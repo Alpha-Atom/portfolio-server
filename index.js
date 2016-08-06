@@ -37,6 +37,20 @@ var auth = function (req, res, next) {
   };
 };
 
+io.on('connection', function(socket){
+  console.log('a user connected');
+  nicklist[socket.id] = getRandomInt(0,99999);
+  socket.on('chat message', function(msg){
+    console.log(msg.nick + '#' + nicklist[socket.id] + ': ' + msg.msg);
+    msg.nick = msg.nick + '#' + nicklist[socket.id];
+    io.emit('chat message', msg);
+  });
+  socket.on('disconnect', function(){
+    console.log('user disconnected');
+    delete nicklist[socket.id];
+  });
+});
+
 fs.existsSync(logDirectory) || fs.mkdirSync(logDirectory)
 var accessLogStream = FileStreamRotator.getStream({
   date_format: 'YYYYMMDD',
