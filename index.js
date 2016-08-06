@@ -3,16 +3,15 @@ var https = require('https');
 var express = require('express');
 var path = require('path');
 var forceSSL = require('express-force-ssl');
-var route_manager = require("../ip-project-server/utils/route-manager.js");
-var scheduler = require("../ip-project-server/presenters/schedule-controller.js");
 var bodyParser = require('body-parser');
 var serveIndex = require('serve-index');
 var basic_auth = require('basic-auth');
 var FileStreamRotator = require('file-stream-rotator');
 var morgan = require('morgan');
-var fs = require('fs');
-var logDirectory = 'log'
+var route_manager = require("../ip-project-server/utils/route-manager.js");
+var scheduler = require("../ip-project-server/presenters/schedule-controller.js");
 var app = express();
+var logDirectory = 'log'
 
 // Set up authentication and existing events.
 var log_passwd = fs.readFileSync('../ip-project-server/logpasswd', 'utf-8');
@@ -31,10 +30,20 @@ var auth = function (req, res, next) {
     return unauthorized(res);
   };
 };
+
+fs.existsSync(logDirectory) || fs.mkdirSync(logDirectory)
+var accessLogStream = FileStreamRotator.getStream({
+  date_format: 'YYYYMMDD',
+  filename: logDirectory + '/access-%DATE%.log',
+  frequency: 'daily',
+  verbose: false
+})
+
 scheduler.register_existing_events();
 
 // Always use SSL, comes first.
 app.use(forceSSL);
+
 app.use(bodyParser.json()); // for parsing application/json
 app.use(bodyParser.urlencoded({ extended: true })); // for parsing application/x-www-form-urlencoded
 
@@ -46,13 +55,6 @@ app.use('/soc-api/*', function(req, res, next) {
 });
 
 // Logging comes next
-fs.existsSync(logDirectory) || fs.mkdirSync(logDirectory)
-var accessLogStream = FileStreamRotator.getStream({
-  date_format: 'YYYYMMDD',
-  filename: logDirectory + '/access-%DATE%.log',
-  frequency: 'daily',
-  verbose: false
-})
 app.use(morgan('short', {stream: accessLogStream}))
 app.use(morgan('short'));
 
