@@ -13,6 +13,12 @@ var scheduler = require("../ip-project-server/presenters/schedule-controller.js"
 var app = express();
 var logDirectory = 'log'
 
+/*
+
+  Basic administration stuff
+
+*/
+
 // Set up authentication and existing events.
 var log_passwd = fs.readFileSync('../ip-project-server/logpasswd', 'utf-8');
 var auth = function (req, res, next) {
@@ -41,6 +47,12 @@ var accessLogStream = FileStreamRotator.getStream({
 
 scheduler.register_existing_events();
 
+/*
+
+  Set up middleware, included logging and headers.
+
+*/
+
 // Always use SSL, comes first.
 app.use(forceSSL);
 
@@ -58,6 +70,12 @@ app.use('/soc-api/*', function(req, res, next) {
 app.use(morgan('short', {stream: accessLogStream}))
 app.use(morgan('short'));
 
+/*
+
+  Set up the individual routes for each part of my portfolio
+
+*/
+
 // Check the /soc-api/ routes.
 app.use('/soc-api/v1', route_manager);
 
@@ -72,6 +90,12 @@ app.use('/', express.static('../www/'));
 app.use(function (req,res,next) {
   res.status(404).sendFile(path.resolve('../www_res/404/index.html'));
 });
+
+/*
+
+  Below here we set up the servers and choose which ports they will listen on.
+
+*/
 
 var prkey = fs.readFileSync('key.pem');
 var certi = fs.readFileSync('cert.pem');
