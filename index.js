@@ -1,4 +1,5 @@
 var fs = require('fs');
+var compression = require('compression')
 var https = require('https');
 var express = require('express');
 var path = require('path');
@@ -8,10 +9,12 @@ var serveIndex = require('serve-index');
 var basic_auth = require('basic-auth');
 var FileStreamRotator = require('file-stream-rotator');
 var morgan = require('morgan');
+var hsts = require('hsts');
 var route_manager = require("../ip-project-server/utils/route-manager.js");
 var scheduler = require("../ip-project-server/presenters/schedule-controller.js");
 var app = express();
 var logDirectory = 'log'
+var nicklist = {};
 
 /*
 
@@ -37,19 +40,6 @@ var auth = function (req, res, next) {
   };
 };
 
-io.on('connection', function(socket){
-  console.log('a user connected');
-  nicklist[socket.id] = getRandomInt(0,99999);
-  socket.on('chat message', function(msg){
-    console.log(msg.nick + '#' + nicklist[socket.id] + ': ' + msg.msg);
-    msg.nick = msg.nick + '#' + nicklist[socket.id];
-    io.emit('chat message', msg);
-  });
-  socket.on('disconnect', function(){
-    console.log('user disconnected');
-    delete nicklist[socket.id];
-  });
-});
 
 fs.existsSync(logDirectory) || fs.mkdirSync(logDirectory)
 var accessLogStream = FileStreamRotator.getStream({
@@ -68,7 +58,13 @@ scheduler.register_existing_events();
 */
 
 // Always use SSL, comes first.
+app.use(compression());
 app.use(forceSSL);
+app.use(hsts({
+  maxAge: 31536000000,
+  includeSubDomains: true, // Must be enabled to be approved by Google 
+  preload: true
+}))
 
 app.use(bodyParser.json()); // for parsing application/json
 app.use(bodyParser.urlencoded({ extended: true })); // for parsing application/x-www-form-urlencoded
@@ -115,7 +111,7 @@ var prkey = fs.readFileSync('key.pem');
 var certi = fs.readFileSync('cert.pem');
 var capem = fs.readFileSync('ca.pem');
 
-https.createServer({
+var s = https.createServer({
   key: prkey,
   cert: certi,
   ca: capem
@@ -126,3 +122,26 @@ https.createServer({
 app.listen(80, function () {
   console.log('Now accepting HTTP connections on port 80.');
 });
+
+function getRandomInt(min, max) {
+  min = Math.ceil(min);
+  max = Math.floor(max);
+  return Math.floor(Math.random() * (max - min)) + min;
+}
+
+var io = require('socket.io')(s);
+
+io.on('connection', function(socket){
+  console.log('a user connected');
+  nicklist[socket.id] = getRandomInt(0,99999);
+  socket.on('chat message', function(msg){
+    console.log(msg.nick + '#' + nicklist[socket.id] + ': ' + msg.msg);
+    msg.nick = msg.nick + '#' + nicklist[socket.id];
+    io.emit('chat message', msg);
+  });
+  socket.on('disconnect', function(){
+    console.log('user disconnected');
+    delete nicklist[socket.id];
+  });
+});
+
